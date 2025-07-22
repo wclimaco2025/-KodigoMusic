@@ -13,7 +13,9 @@ const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {rules:{
      "semi":['error',"always"],
-     "quote":['error',"always"]
+     "quote":['error',"always"],
+     "no-console":['error'],
+     "no-unused-vars":['error'],
   }
 }
 ];
