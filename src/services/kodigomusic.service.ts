@@ -5,7 +5,7 @@ import axios from "axios";
 export const fetchAlbums = async () => {
   const token = await getAccessToken();
   const response = await axios.get(
-    `${process.env.NEXT_PUBLIC_SPOTIFY_BASE_URL}/v1/browse/new-releases?market=ES&limit=20`,
+    `${process.env.NEXT_PUBLIC_SPOTIFY_BASE_URL}/v1/browse/new-releases?market=ES&limit=10`,
     {
       headers: {
         Authorization: `Bearer ${token}`,

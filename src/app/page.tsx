@@ -1,7 +1,14 @@
+'use client'
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Album, Cancion, Footer, Header, Sidebar } from "./components";
+
+// instancia de QueryClient
+const queryClient = new QueryClient();
 
 export default function Home() {
   return (
+    // Usando instancia de queryClient
+    <QueryClientProvider client={queryClient}>
      <div className="flex flex-col h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
       <Header />
       <div className="flex flex-grow overflow-hidden">
@@ -17,5 +24,6 @@ export default function Home() {
       </div>
       <Footer />
     </div>
+    </QueryClientProvider>
   );
 }

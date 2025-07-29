@@ -1,35 +1,24 @@
 "use client";
 import { fetchAlbums } from "@/services/kodigomusic.service";
 import { AlbumResponse } from "@/types/types.kodigomusic";
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 export const Album = () => {
-  
-  const [albums, setAlbums] = useState<AlbumResponse[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const getAlbums = async () => {
-      try {
-        const data = await fetchAlbums();
-        setAlbums(data);
-      } catch (err) {
-        setError("Failed to fetch albums");
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Usando Tanstack Query para consumir el api de spotify y retornar albumes 
+  const { data: albums = [], isLoading, error } =useQuery<AlbumResponse[], Error>({
+    queryKey: ["albums"],
+    queryFn: fetchAlbums,
+    staleTime: 5 * 60 * 1000, // 5 minutos obsolete time
+    gcTime: 10 * 60 * 1000, // 10 minutos garbage collector
+  });
 
-    getAlbums();
-  }, []);
-
-  if (loading) {
-    return <div>Loading...</div>;
+  if (isLoading) {
+    return <div className="text-2xl font-bold text-white">Cargando Albumes...</div>;
   }
 
   if (error) {
-    return <div>{error}</div>;
+    return <div className="text-2xl font-bold text-white">Fallo al obtener Albumes</div>;
   }
 
   return (
