@@ -3,7 +3,12 @@ import { fetchAlbums } from "@/services/kodigomusic.service";
 import { AlbumResponse } from "@/types/types.kodigomusic";
 import { useQuery } from "@tanstack/react-query";
 
-export const Album = () => {
+// Props para pasar el id del Album seleccionado para ver las canciones
+interface AlbumProps {
+  onAlbumClick?: (albumId: string) => void;
+}
+
+export const Album = ({ onAlbumClick }: AlbumProps) => {
 
   // Usando Tanstack Query para consumir el api de spotify y retornar albumes 
   const { data: albums = [], isLoading, error } =useQuery<AlbumResponse[], Error>({
@@ -12,6 +17,13 @@ export const Album = () => {
     staleTime: 5 * 60 * 1000, // 5 minutos obsolete time
     gcTime: 10 * 60 * 1000, // 10 minutos garbage collector
   });
+
+  // Evento click para manejar el album seleccionado
+  const handleAlbumClick = (albumId: string) => {
+    if (onAlbumClick) {
+      onAlbumClick(albumId);
+    }
+  };
 
   if (isLoading) {
     return <div className="text-2xl font-bold text-white">Cargando Albumes...</div>;
@@ -34,6 +46,7 @@ export const Album = () => {
         {albums.map((album) => (
           <div
             key={album.id}
+            onClick={() => handleAlbumClick(album.id)}
             className="bg-gray-800/50 p-4 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer group"
           >
             <div className="relative mb-4">

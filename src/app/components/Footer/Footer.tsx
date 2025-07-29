@@ -1,8 +1,10 @@
-import React from 'react'
-import { Player } from '../Player/Player'
+import { Player } from "../Player/Player";
+import { TracksItem } from "@/types/types.kodigomusic";
 
-export const Footer = () => {
-  return (
-    <Player />
-  )
+interface FooterProps {
+  selectedSong?: TracksItem;
 }
+
+export const Footer = ({ selectedSong }: FooterProps) => {
+  return <Player cancionProp={selectedSong} />;
+};

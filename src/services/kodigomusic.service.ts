@@ -17,6 +17,22 @@ export const fetchAlbums = async () => {
   return response.data.albums.items;
 };
 
+//Obtener Canciones de un Album específico
+export const fetchSongs = async (idAlbum: string) => {
+  const token = await getAccessToken();
+  const response = await axios.get(
+    `${process.env.NEXT_PUBLIC_SPOTIFY_BASE_URL}/v1/albums/${idAlbum}/tracks?market=ES&limit=50`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  // El endpoint albums/{id}/tracks devuelve { items: [...] }
+  // Extraemos solo el array de canciones
+  return response.data.items;
+};
+
 // Obtener álbumes del usuario (requiere autenticación de usuario)
 export const fetchUserAlbums = async () => {
   const userToken = getUserAccessToken();

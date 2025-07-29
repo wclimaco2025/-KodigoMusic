@@ -1,67 +1,53 @@
-import React from 'react'
+import { useQuery } from "@tanstack/react-query";
+import {TracksItem} from "@/types/types.kodigomusic";
+import {fetchSongs} from "@/services/kodigomusic.service";
+import { formatDuration } from "@/utils/utils.kodigomusic";
 
-export const Cancion = () => {
-  const songs = [
-    {
-      id: 1,
-      title: "Bohemian Rhapsody",
-      artist: "Queen",
-      album: "A Night at the Opera",
-      duration: "5:55",
-      plays: "1.2B",
-      isPlaying: true
-    },
-    {
-      id: 2,
-      title: "Billie Jean",
-      artist: "Michael Jackson",
-      album: "Thriller",
-      duration: "4:54",
-      plays: "890M",
-      isPlaying: false
-    },
-    {
-      id: 3,
-      title: "Back in Black",
-      artist: "AC/DC",
-      album: "Back in Black",
-      duration: "4:15",
-      plays: "756M",
-      isPlaying: false
-    },
-    {
-      id: 4,
-      title: "Imagine",
-      artist: "John Lennon",
-      album: "Imagine",
-      duration: "3:07",
-      plays: "645M",
-      isPlaying: false
-    },
-    {
-      id: 5,
-      title: "Hotel California",
-      artist: "Eagles",
-      album: "Hotel California",
-      duration: "6:30",
-      plays: "534M",
-      isPlaying: false
-    },
-    {
-      id: 6,
-      title: "Stairway to Heaven",
-      artist: "Led Zeppelin",
-      album: "Led Zeppelin IV",
-      duration: "8:02",
-      plays: "423M",
-      isPlaying: false
+// Props para pasar el id del Album
+interface CancionProps {
+  albumId?: string;
+  onSongClick?: (cancionId: TracksItem) => void;
+}
+
+export const Cancion = ({ albumId, onSongClick }: CancionProps) => {
+  const { data: songs = [], isLoading, error } = useQuery<TracksItem[], Error>({
+    queryKey: ["canciones", albumId],
+    queryFn: () => fetchSongs(albumId!),
+    enabled: !!albumId, // Solo ejecutar la query si tenemos un albumId
+    staleTime: 5 * 60 * 1000, // 5 minutos obsolete time
+    gcTime: 10 * 60 * 1000, // 10 minutos garbage collector
+  });
+
+  // Evento click para manejar el album seleccionado
+  const handleSongClick = (cancionSel: TracksItem) => {
+    if (onSongClick) {
+      onSongClick(cancionSel);
     }
-  ];
+    //console.log("CAncion seleccionada: ", cancionSel);
+  };
+
+  if (!albumId) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-2xl font-bold text-white">Selecciona un álbum para ver sus canciones</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return <div className="text-2xl font-bold text-white">Cargando canciones...</div>;
+  }
+
+  if (error) {
+    return <div className="text-2xl font-bold text-white">Error al cargar las canciones</div>;
+  }
+
+
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-white">Canciones Populares</h2>
+        <h2 className="text-2xl font-bold text-white">Lista de Canciones</h2>
         <button className="text-gray-400 hover:text-white text-sm font-medium transition-colors">
           Ver todas
         </button>
@@ -83,23 +69,14 @@ export const Cancion = () => {
 
         {/* Songs List */}
         <div>
-          {songs.map((song, index) => (
+          {songs.map((song: TracksItem, index: number) => (
             <div
               key={song.id}
+              onClick={() => handleSongClick(song)}
               className="grid grid-cols-12 gap-4 px-6 py-3 hover:bg-gray-700/30 transition-colors group cursor-pointer"
             >
               <div className="col-span-1 flex items-center">
-                {song.isPlaying ? (
-                  <div className="flex items-center justify-center">
-                    <div className="flex space-x-1">
-                      <div className="w-1 h-4 bg-red-500 animate-pulse"></div>
-                      <div className="w-1 h-4 bg-red-500 animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                      <div className="w-1 h-4 bg-red-500 animate-pulse" style={{animationDelay: '0.4s'}}></div>
-                    </div>
-                  </div>
-                ) : (
-                  <span className="text-gray-400 group-hover:hidden">{index + 1}</span>
-                )}
+                <span className="text-gray-400 group-hover:hidden">{index + 1}</span>
                 <button className="hidden group-hover:block text-white hover:text-red-400 transition-colors">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
@@ -107,6 +84,7 @@ export const Cancion = () => {
                 </button>
               </div>
 
+              {/* Botón Play de la canción */}
               <div className="col-span-5 flex items-center gap-3">
                 <div className="w-10 h-10 bg-gray-700 rounded flex-shrink-0 flex items-center justify-center">
                   <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
@@ -114,21 +92,23 @@ export const Cancion = () => {
                   </svg>
                 </div>
                 <div className="min-w-0">
-                  <p className={`font-medium truncate ${song.isPlaying ? 'text-red-400' : 'text-white'}`}>
-                    {song.title}
+                  <p className="font-medium truncate text-white">
+                    {song.name}
                   </p>
-                  <p className="text-gray-400 text-sm truncate">{song.artist}</p>
+                  <p className="text-gray-400 text-sm truncate">
+                    {song.artists.map(artist => artist.name).join(', ')}
+                  </p>
                 </div>
               </div>
 
               <div className="col-span-3 flex items-center">
                 <p className="text-gray-400 text-sm truncate hover:text-white transition-colors cursor-pointer">
-                  {song.album}
+                  Álbum
                 </p>
               </div>
 
               <div className="col-span-2 flex items-center">
-                <p className="text-gray-400 text-sm">{song.plays}</p>
+                <p className="text-gray-400 text-sm">-</p>
               </div>
 
               <div className="col-span-1 flex items-center justify-end gap-2">
@@ -137,7 +117,7 @@ export const Cancion = () => {
                     <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
                   </svg>
                 </button>
-                <span className="text-gray-400 text-sm">{song.duration}</span>
+                <span className="text-gray-400 text-sm">{formatDuration(song.duration_ms)}</span>
                 <button className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-white transition-all">
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />

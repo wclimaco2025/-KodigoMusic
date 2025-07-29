@@ -23,21 +23,17 @@ export type AlbumResponse = {
 export type Artist = {
     external_urls: ExternalUrls;
     href:          string;
-    id:            ID;
-    name:          Name;
-    type:          "artist";
-    uri:           URI;
+    id:            string;
+    name:          string;
+    type:          string;
+    uri:           string;
 }
 
 export type ExternalUrls = {
     spotify: string;
 }
 
-export type ID = "0vwWVUYVbaF0LPMlQkWjAM" | "4wLXwxDeWQ8mtUIRPxGiD6";
 
-export type Name = "Powerful Donald" | "Marc Anthony";
-
-export type URI = "spotify:artist:0vwWVUYVbaF0LPMlQkWjAM" | "spotify:artist:4wLXwxDeWQ8mtUIRPxGiD6";
 
 export type Copyright = {
     text: string;
