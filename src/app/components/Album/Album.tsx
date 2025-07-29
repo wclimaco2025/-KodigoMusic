@@ -4,57 +4,7 @@ import { AlbumResponse } from "@/types/types.kodigomusic";
 import { useEffect, useState } from "react";
 
 export const Album = () => {
-  /*  const albums = [
-    {
-      id: 1,
-      title: "Bohemian Rhapsody",
-      artist: "Queen",
-      year: "1975",
-      cover: "https://via.placeholder.com/200x200/1f2937/ffffff?text=Queen",
-      songs: 12
-    },
-    {
-      id: 2,
-      title: "Thriller",
-      artist: "Michael Jackson",
-      year: "1982",
-      cover: "https://via.placeholder.com/200x200/1f2937/ffffff?text=MJ",
-      songs: 9
-    },
-    {
-      id: 3,
-      title: "Back in Black",
-      artist: "AC/DC",
-      year: "1980",
-      cover: "https://via.placeholder.com/200x200/1f2937/ffffff?text=ACDC",
-      songs: 10
-    },
-    {
-      id: 4,
-      title: "The Dark Side of the Moon",
-      artist: "Pink Floyd",
-      year: "1973",
-      cover: "https://via.placeholder.com/200x200/1f2937/ffffff?text=PF",
-      songs: 10
-    },
-    {
-      id: 5,
-      title: "Abbey Road",
-      artist: "The Beatles",
-      year: "1969",
-      cover: "https://via.placeholder.com/200x200/1f2937/ffffff?text=Beatles",
-      songs: 17
-    },
-    {
-      id: 6,
-      title: "Nevermind",
-      artist: "Nirvana",
-      year: "1991",
-      cover: "https://via.placeholder.com/200x200/1f2937/ffffff?text=Nirvana",
-      songs: 12
-    }
-  ];
-*/
+  
   const [albums, setAlbums] = useState<AlbumResponse[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
