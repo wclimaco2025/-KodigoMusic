@@ -70,9 +70,33 @@ export type TracksItem = {
     id:            string;
     is_playable:   boolean;
     name:          string;
-    preview_url:   null;
+    preview_url:   string | null;
     track_number:  number;
     type:          "track";
     uri:           string;
     is_local:      boolean;
+}
+
+// Tipos para resultados de búsqueda
+export type SearchResults = {
+    albums: AlbumResponse[];
+    artists: Artist[];
+    tracks: TracksItem[];
+}
+
+// Tipo para artista completo (con más información)
+export type ArtistFull = {
+    external_urls: ExternalUrls;
+    followers: {
+        href: string | null;
+        total: number;
+    };
+    genres: string[];
+    href: string;
+    id: string;
+    images: Image[];
+    name: string;
+    popularity: number;
+    type: string;
+    uri: string;
 }

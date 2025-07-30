@@ -1,5 +1,7 @@
 import { TracksItem } from "@/types/types.kodigomusic";
-import { formatDuration } from "@/utils/utils.kodigomusic";
+import { formatDuration, formatTime } from "@/utils/utils.kodigomusic";
+import { useState, useRef, useEffect } from "react";
+import { searchJamendo } from "@/api/music-streaming.api";
 
 // Props para pasar el id de la Canción
 interface CancionesProps {
@@ -7,19 +9,139 @@ interface CancionesProps {
 }
 
 export const Player = ({ cancionProp }: CancionesProps) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [audioSource, setAudioSource] = useState<string>("");
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Buscar fuentes de audio (Spotify + Jamendo)
+  const findAudioSource = async (songName: string, artistName: string) => {
+    setIsLoading(true);
+    setAudioUrl(null);
+    setAudioSource("");
+
+    try {
+      // 1. Intentar con Spotify preview primero
+      if (cancionProp?.preview_url) {
+        setAudioUrl(cancionProp.preview_url);
+        setAudioSource("Spotify Preview (30s)");
+        setIsLoading(false);
+        return;
+      }
+
+      // 2. Buscar en Jamendo (música libre)
+      const jamendoResult = await searchJamendo(songName, artistName);
+      if (jamendoResult?.audioUrl) {
+        setAudioUrl(jamendoResult.audioUrl);
+        setAudioSource("Jamendo");
+        setIsLoading(false);
+        return;
+      }
+
+      // No se encontró ninguna fuente
+      setAudioSource("No disponible");
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error buscando fuente de audio:", error);
+      setAudioSource("Error");
+      setIsLoading(false);
+    }
+  };
+
+  // Calcular el porcentaje de progreso
+  const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  // Manejar play/pause
+  const togglePlayPause = async () => {
+    if (!audioUrl && cancionProp) {
+      // Buscar fuente de audio si no existe
+      const songName = cancionProp.name;
+      const artistName =
+        cancionProp.artists?.map((a) => a.name).join(", ") || "";
+      await findAudioSource(songName, artistName);
+      return;
+    }
+
+    if (audioRef.current && audioUrl) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  // Manejar click en la barra de progreso
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (audioRef.current && duration > 0) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const newTime = (clickX / rect.width) * duration;
+      audioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  };
+
+  // Efectos para manejar eventos del audio
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const updateTime = () => setCurrentTime(audio.currentTime);
+    const updateDuration = () => setDuration(audio.duration);
+    const handleEnded = () => setIsPlaying(false);
+
+    audio.addEventListener("timeupdate", updateTime);
+    audio.addEventListener("loadedmetadata", updateDuration);
+    audio.addEventListener("ended", handleEnded);
+
+    return () => {
+      audio.removeEventListener("timeupdate", updateTime);
+      audio.removeEventListener("loadedmetadata", updateDuration);
+      audio.removeEventListener("ended", handleEnded);
+    };
+  }, [audioUrl]);
+
+  // Efecto para buscar audio cuando cambia la canción
+  useEffect(() => {
+    if (cancionProp) {
+      const songName = cancionProp.name;
+      const artistName =
+        cancionProp.artists?.map((a) => a.name).join(", ") || "";
+      findAudioSource(songName, artistName);
+    }
+  }, [cancionProp]);
+
   return (
     <div className="bg-gradient-to-r from-gray-900 to-black p-4 shadow-2xl fixed bottom-0 left-0 right-0 border-t border-gray-700">
+      {/* Audio element oculto */}
+      {audioUrl && <audio ref={audioRef} src={audioUrl} preload="metadata" />}
+
       <div className="max-w-7xl mx-auto">
         {/* Progress Bar */}
         <div className="mb-3">
           <div className="flex items-center gap-2 text-xs text-gray-400">
-            <span>0:00</span>
-            <div className="flex-1 bg-gray-700 rounded-full h-1 group cursor-pointer">
-              <div className="bg-white h-1 rounded-full w-1/3 group-hover:bg-red-500 transition-colors relative">
+            <span>{formatTime(currentTime)}</span>
+            <div
+              className="flex-1 bg-gray-700 rounded-full h-1 group cursor-pointer"
+              onClick={handleProgressClick}
+            >
+              <div
+                className="bg-white h-1 rounded-full group-hover:bg-red-500 transition-colors relative"
+                style={{ width: `${progressPercentage}%` }}
+              >
                 <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </div>
             </div>
-            <span>{formatDuration(cancionProp?.duration_ms || 0)}</span>
+            <span>
+              {duration > 0
+                ? formatTime(duration)
+                : formatDuration(cancionProp?.duration_ms || 0)}
+            </span>
           </div>
         </div>
 
@@ -50,6 +172,11 @@ export const Player = ({ cancionProp }: CancionesProps) => {
                   ?.map((artist) => artist.name)
                   .join(", ") || "Artista desconocido"}
               </p>
+              {audioSource && (
+                <p className="text-xs text-gray-500 truncate">
+                  {isLoading ? "Buscando audio..." : `Fuente: ${audioSource}`}
+                </p>
+              )}
             </div>
             <button className="text-gray-400 hover:text-white transition-colors p-2">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -76,14 +203,48 @@ export const Player = ({ cancionProp }: CancionesProps) => {
               </svg>
             </button>
 
-            <button className="bg-white text-black rounded-full p-3 hover:scale-105 transition-transform">
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
-                  clipRule="evenodd"
-                />
-              </svg>
+            <button
+              className="bg-white text-black rounded-full p-3 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={togglePlayPause}
+              disabled={isLoading || (!audioUrl && !cancionProp)}
+            >
+              {isLoading ? (
+                <svg
+                  className="w-6 h-6 animate-spin"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4 2a2 2 0 00-2 2v11a2 2 0 002 2h2a2 2 0 002-2V4a2 2 0 00-2-2H4zm6 0a2 2 0 00-2 2v11a2 2 0 002 2h2a2 2 0 002-2V4a2 2 0 00-2-2h-2z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              ) : isPlaying ? (
+                <svg
+                  className="w-6 h-6"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  className="w-6 h-6"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
             </button>
 
             <button className="text-gray-400 hover:text-white transition-colors">

@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 // Props para pasar el id del Album seleccionado para ver las canciones
 interface AlbumProps {
   onAlbumClick?: (albumId: string) => void;
+  selectedAlbum?: AlbumResponse; // Para manejar el álbum seleccionado 
 }
 
 export const Album = ({ onAlbumClick }: AlbumProps) => {
@@ -56,7 +57,10 @@ export const Album = ({ onAlbumClick }: AlbumProps) => {
                 className="w-full aspect-square object-cover rounded-lg shadow-lg"
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 rounded-lg flex items-center justify-center">
+               
+                {/* Botón de reproducción que aparece al pasar el mouse de color rojo*/}
                 <button className="bg-red-500 text-white p-3 rounded-full opacity-0 group-hover:opacity-100 transform scale-75 group-hover:scale-100 transition-all duration-300 hover:bg-red-600">
+                 {/* Icono de Play */}
                   <svg
                     className="w-6 h-6"
                     fill="currentColor"
@@ -73,6 +77,7 @@ export const Album = ({ onAlbumClick }: AlbumProps) => {
             </div>
 
             <div>
+              {/* Título del álbum, nombre del artista y año de lanzamiento, cambia el color del título con el hover */}
               <h3 className="text-white font-medium text-sm mb-1 truncate group-hover:text-red-400 transition-colors">
                 {album.name}
               </h3>

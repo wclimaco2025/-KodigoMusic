@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# readme de la documentación de las APIs de música
+# que se usaron en el proyecto
+# para que no se suba al repositorio
+# y se pueda mantener la documentación localmente
+MUSIC_APIS_SETUP.md

@@ -10,6 +10,8 @@ interface CancionProps {
 }
 
 export const Cancion = ({ albumId, onSongClick }: CancionProps) => {
+  // Usando Tanstack Query para consumir el api de spotify y retornar canciones del album seleccionado
+  // Habilitamos la query solo si tenemos un albumId
   const { data: songs = [], isLoading, error } = useQuery<TracksItem[], Error>({
     queryKey: ["canciones", albumId],
     queryFn: () => fetchSongs(albumId!),
